@@ -69,12 +69,27 @@ std::string utf8chr(int cp)
 }
 
 namespace nlpUtil{
+
+    void utf8_substr(const string& str,
+                const int start, 
+                const int length,
+                string& res);
+
     void parse(const std::string& name,
                 const int length,
                 vector<string>& res){ 
         int txt_length = utf8::distance(name.begin(), name.end());  
         for(int i=0; i<txt_length; i++){
-            
+            string local_str = "";
+            if(i + length <= txt_length){
+                utf8_substr(name, i, length, local_str);
+                // cout << "i : " << i << "length : " << length << endl;
+                // cout << local_str << endl;
+                res.push_back(local_str);
+            }
+        }
+        if (length + 1 < txt_length){
+            parse(name, length + 1, res);   
         }
     }
 
@@ -97,17 +112,22 @@ namespace nlpUtil{
         }
         char* chr_start = chr_str; 
         char* chr_end   = chr_start + strlen(chr_str) + 1;
+        int sta_length  = 0;
         int cut_length  = 0;
         do {
             uint32_t code = utf8::next(chr_start, chr_end);
             if (code == 0)
                 continue;
-            std::cout << code << " : " << utf8chr(code) << std::endl;
+            if (sta_length < start){
+                sta_length++;
+                continue;
+            }
+            // std::cout << code << " : " << utf8chr(code) << std::endl;
             string inner_str    = utf8chr(code);
             string pre_str      = res;
             res                 = pre_str + inner_str;
             cut_length++;
-        }while(chr_start < chr_end & cut_length < txt_length);
+        }while(chr_start < chr_end && cut_length < length);
     }
 }
 
@@ -190,7 +210,6 @@ int main(int argc, char* argv){
     }
 
     while(std::getline(inputFileObj, line)){
-        cout << line << endl; 
         istringstream iss(line);
         vector<string> tokens;
         copy(istream_iterator<string>(iss),
@@ -202,7 +221,7 @@ int main(int argc, char* argv){
 
     // utf8 test part
     std::string man = "算了解放i";
-    std::cout << man << std::endl;
+    // std::cout << man << std::endl;
     
     int length = utf8::distance(man.begin(), man.end());
     std::cout << "UTF8-lib string length: " << length << std::endl;
@@ -213,15 +232,18 @@ int main(int argc, char* argv){
     char* str_i = str;
     char* end   = str + strlen(str) + 1;
 
-    do {
-        uint32_t code = utf8::next(str_i, end);
-        if (code == 0)
-            continue;
-        std::cout << code << " : " << utf8chr(code) << std::endl;
-    }while(str_i < end);
-    string subStr;
-    nlpUtil::utf8_substr(man, 4, 2, subStr); 
-    cout << subStr << endl;
+//    do {
+//        uint32_t code = utf8::next(str_i, end);
+//        if (code == 0)
+//            continue;
+//        std::cout << code << " : " << utf8chr(code) << std::endl;
+//    }while(str_i < end);
+
+    vector<string> v_str;
+    nlpUtil::parse(man, 2, v_str);
+    for(vector<string>::iterator it=v_str.begin(); it<v_str.end(); it++){
+        cout << *it << endl;
+    }
     return 0;
 }
 
